@@ -25,6 +25,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  final username = TextEditingController();
+  final password = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -36,12 +39,14 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
+              controller: username,
               decoration: InputDecoration(
                 hintText: 'Example@example.com',
                 labelText: 'Email'
               ),
             ),
             TextField(
+              controller: password,
               decoration: InputDecoration(
                 hintText: 'Password',
                 labelText: 'Password',
@@ -49,11 +54,22 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             FlatButton(
               child: Text('Register a New User'),
-              onPressed: (){},
+              onPressed: (){
+                submitData();
+              },
             ),
           ],
         ),
       ),
     );
+  }
+  
+  Future<List> submitData() async{
+    final response = await http.post("http://10.0.2.2/to_do/NewUser.php", body: {
+      'username' : username.text,
+      'password' : password.text,
+    });
+
+    print(response.body);
   }
 }
