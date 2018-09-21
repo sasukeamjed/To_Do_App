@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
 void main() => runApp(new MyApp());
 
 class MyApp extends StatelessWidget {
-  
+
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
@@ -33,8 +35,21 @@ class _MyHomePageState extends State<MyHomePage> {
         child: new Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            new Text(
-              'You have pushed the button this many times:',
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Example@example.com',
+                labelText: 'Email'
+              ),
+            ),
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Password',
+                labelText: 'Password',
+              ),
+            ),
+            FlatButton(
+              child: Text('Register a New User'),
+              onPressed: (){},
             ),
           ],
         ),
