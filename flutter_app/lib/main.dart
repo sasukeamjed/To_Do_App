@@ -65,11 +65,21 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   
   Future<List> submitData() async{
-    final response = await http.post("http://10.0.2.2/to_do/NewUser.php", body: {
+    await http.post("http://10.0.2.2/to_do/NewUser.php", body: {
       'username' : username.text,
       'password' : password.text,
+    }).then((response){
+      print(response.body);
     });
+  }
 
-    print(response.body);
+  void post() async {
+    var result = await http.post(
+        "http://10.0.2.2/to_do/NewUser.php",
+        body: {
+          "value": "I am cool!"
+        }
+    );
+    print(result.body);
   }
 }
