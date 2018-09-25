@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
+import 'dart:convert';
 
 void main() => runApp(new MyApp());
+
+enum userStatus {
+  loggedIn,
+  LoggedOut,
+}
 
 class MyApp extends StatelessWidget {
 
@@ -55,7 +61,8 @@ class _MyHomePageState extends State<MyHomePage> {
             FlatButton(
               child: Text('Register a New User'),
               onPressed: (){
-                submitData();
+                createUser();
+                //getLogin(username.text, password.text);
               },
             ),
           ],
@@ -64,8 +71,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
   
-  Future<List> submitData() async{
-    await http.post("http://10.0.2.2/to_do/NewUser.php", body: {
+  Future<List> createUser() async{
+    var result = await http.post("http://10.0.2.2/to_do/NewUser.php", body: {
       'username' : username.text,
       'password' : password.text,
     }).then((response){
@@ -73,13 +80,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void post() async {
-    var result = await http.post(
-        "http://10.0.2.2/to_do/NewUser.php",
-        body: {
-          "value": "I am cool!"
-        }
-    );
-    print(result.body);
+  Future<String> getLogin(String username, String password) async {
+    var response = await http.get("http://10.0.2.2/to_do/login.php?username=${username}&password=${password}");
+    var data = response.body;
+    Map<String, dynamic> convertedData = jsonDecode(data);
+    print('this is converted data = ${convertedData}');
   }
 }
