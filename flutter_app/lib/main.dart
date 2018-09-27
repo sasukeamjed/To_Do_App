@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
+import 'login_scree.dart';
 
 void main() => runApp(new MyApp());
 
-enum userStatus {
+enum UserStatus {
   loggedIn,
   LoggedOut,
 }
@@ -20,6 +21,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: new MyHomePage(),
+      routes: {
+        "/login_screen" : (context) => MainScreen(),
+      },
     );
   }
 }
@@ -30,6 +34,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  UserStatus userCondition = UserStatus.LoggedOut;
 
   final username = TextEditingController();
   final password = TextEditingController();
@@ -58,12 +64,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 labelText: 'Password',
               ),
             ),
-            FlatButton(
-              child: Text('Register a New User'),
-              onPressed: (){
-                createUser();
-                //getLogin(username.text, password.text);
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                FlatButton(
+                  child: Text('Register a New User'),
+                  onPressed: (){
+                    createUser();
+                    //getLogin(username.text, password.text);
+                  },
+                ),
+                FlatButton(
+                  child: Text('Log in'),
+                  onPressed: (){
+                    Navigator.pushNamed(context, "/login_screen");
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -76,7 +93,24 @@ class _MyHomePageState extends State<MyHomePage> {
       'username' : username.text,
       'password' : password.text,
     }).then((response){
-      print(response.body);
+      Map<String, dynamic> data = jsonDecode(response.body);
+      switch(data['code']){
+        case 1:{
+          onSignUpIsComplete();
+          Navigator.pushNamed(context, "/main_screen");
+        }
+        break;
+
+        case 2: {
+          onSignUpIsFailed();
+        }
+        break;
+
+        case 3: {
+          whenUserAlreadyexist();
+        }
+        break;
+      }
     });
   }
 
@@ -86,4 +120,52 @@ class _MyHomePageState extends State<MyHomePage> {
     Map<String, dynamic> convertedData = jsonDecode(data);
     print('this is converted data = ${convertedData}');
   }
+
+  void onSignUpIsComplete() {
+    var alert = new AlertDialog(
+      title: new Text("Signing up Completed"),
+      content: new Text(
+          "You can sign in now"),
+    );
+    showDialog(context: context, child: alert);
+  }
+
+  void whenUserAlreadyexist() {
+    var alert = new AlertDialog(
+      title: new Text("Signing up Failed"),
+      content: new Text(
+          "User Already exist"),
+    );
+    showDialog(context: context, child: alert);
+  }
+
+  void onSignUpIsFailed() {
+    var alert = new AlertDialog(
+      title: new Text("Signing up Failed"),
+      content: new Text(
+          "You can try again later"),
+    );
+    showDialog(context: context, child: alert);
+  }
+
+  void onSignedInErrorPassword() {
+    var alert = new AlertDialog(
+      title: new Text("Pseudo Error"),
+      content: new Text(
+          "There was an Password error signing in. Please try again."),
+    );
+    showDialog(context: context, child: alert);
+  }
+
+  void onSignedInErrorPseudo() {
+    var alert = new AlertDialog(
+      title: new Text("Pseudo Error"),
+      content:
+      new Text("There was an Pseudo error signing in. Please try again."),
+    );
+    showDialog(context: context, child: alert);
+  }
+
+
+
 }
