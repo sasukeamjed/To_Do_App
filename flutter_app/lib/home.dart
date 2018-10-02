@@ -1,9 +1,14 @@
+import 'dart:async';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
-  String username;
 
-  HomeScreen(this.username);
+  String username;
+  int userId;
+
+  HomeScreen(this.username, this.userId);
 
   @override
   HomeScreenState createState() {
@@ -15,7 +20,13 @@ class HomeScreenState extends State<HomeScreen> {
   var editMode = false;
   var noteController = TextEditingController();
 
-  var notes = new List();
+  List<String> notes = new List();
+
+  @override
+  void initState() {
+    getNotes();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,8 +48,10 @@ class HomeScreenState extends State<HomeScreen> {
                     return null;
                   } else {
                     notes.add(noteController.text);
+                    addNoteToDb();
+                    getNotes();
                     noteController.clear();
-                    print(notes);
+                    //print(notes);
                   }
                 }
                 print(editMode);
@@ -67,12 +80,36 @@ class HomeScreenState extends State<HomeScreen> {
       list = ListView.builder(
         itemCount: notes.length,
         itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(notes[index]),
+          return Column(
+            children: <Widget>[
+              ListTile(
+                title: Text(notes[index]),
+                trailing: Checkbox(value: false, onChanged: (mode){}),
+              ),
+              Divider(),
+            ],
           );
         },
       );
     }
     return list;
   }
+  
+  Future<Null> addNoteToDb() async{
+    http.post("http://10.0.2.2/to_do/note_data.php", body: {
+      "note" : noteController.text,
+      "userId" : widget.userId.toString(),
+    }).then((result){
+      print(result.body);
+    });
+  }
+
+  Future<List> getNotes() async{
+    http.get("http://10.0.2.2/to_do/note_data.php").then((response){
+      Map<String, dynamic> map = jsonDecode(response.body);
+      print(map);
+      map["array"].forEach((map) =>  notes.add(map["note"]));
+    });
+  }
+
 }

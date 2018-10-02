@@ -54,7 +54,7 @@ class MainScreen extends StatelessWidget {
       Map<String, dynamic> convertedData = jsonDecode(data);
       print('this is converted data = ${convertedData}');
       print(convertedData['result'][0]['id']);
-      Navigator.push(context, MaterialPageRoute(builder: (context)=> HomeScreen(convertedData['result'][0]['username'])));
+      Navigator.push(context, MaterialPageRoute(builder: (context)=> HomeScreen(convertedData['result'][0]['username'], int.parse(convertedData['result'][0]['id']))));
     }).catchError((error){
       print(error);
     });
