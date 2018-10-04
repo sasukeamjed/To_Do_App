@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
-
   String username;
   int userId;
 
@@ -20,10 +19,13 @@ class HomeScreenState extends State<HomeScreen> {
   var editMode = false;
   var noteController = TextEditingController();
 
+  bool taskIsDone = false;
+
   List<String> notes = new List();
 
   @override
   void initState() {
+    notes.clear();
     getNotes();
     super.initState();
   }
@@ -66,50 +68,57 @@ class HomeScreenState extends State<HomeScreen> {
                 controller: noteController,
                 autofocus: true,
               )
-            : listNotesBuilder(),
+            : listNotesBuilder(context),
       ),
     );
   }
 
-  Widget listNotesBuilder() {
-    Widget list = Text('There is not items available');
-
+  Widget listNotesBuilder(BuildContext context) {
     if (notes.isEmpty) {
-      return list;
+      print('list is empty');
+      return Text('There is not items available');
     } else {
-      list = ListView.builder(
-        itemCount: notes.length,
-        itemBuilder: (context, index) {
-          return Column(
-            children: <Widget>[
-              ListTile(
-                title: Text(notes[index]),
-                trailing: Checkbox(value: false, onChanged: (mode){}),
-              ),
-              Divider(),
-            ],
-          );
-        },
-      );
+      print('there is items on the list');
+      return ListView.builder(
+          itemCount: notes.length,
+          itemBuilder: (context, index) {
+            return Column(
+              children: <Widget>[
+                ListTile(
+                  title: Text(notes[index]),
+                  trailing: Checkbox(
+                      value: taskIsDone,
+                      onChanged: (mode) {
+                        setState(() {
+                          taskIsDone = mode;
+                        });
+                      }),
+                ),
+                Divider(),
+              ],
+            );
+          });
     }
-    return list;
   }
-  
-  Future<Null> addNoteToDb() async{
+
+  Future<Null> addNoteToDb() async {
     http.post("http://10.0.2.2/to_do/note_data.php", body: {
-      "note" : noteController.text,
-      "userId" : widget.userId.toString(),
-    }).then((result){
+      "note": noteController.text,
+      "userId": widget.userId.toString(),
+    }).then((result) {
       print(result.body);
     });
   }
 
-  Future<List> getNotes() async{
-    http.get("http://10.0.2.2/to_do/note_data.php").then((response){
+  Future<List> getNotes({BuildContext context}) async {
+    http.get("http://10.0.2.2/to_do/get_notes.php?userId=${widget.userId}").then((response) {
       Map<String, dynamic> map = jsonDecode(response.body);
       print(map);
-      map["array"].forEach((map) =>  notes.add(map["note"]));
+      map["array"].forEach((map) => notes.add(map["note"]));
+    }).whenComplete(() {
+      setState(() {
+        listNotesBuilder(context);
+      });
     });
   }
-
 }
