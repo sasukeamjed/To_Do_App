@@ -77,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 FlatButton(
                   child: Text('Log in'),
                   onPressed: (){
-                    Navigator.pushNamed(context, "/login_screen");
+                    Navigator.pushReplacementNamed(context, "/login_screen");
                   },
                 ),
               ],

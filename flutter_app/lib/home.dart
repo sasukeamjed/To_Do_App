@@ -52,9 +52,11 @@ class HomeScreenState extends State<HomeScreen> {
                     notes.add(noteController.text);
                     addNoteToDb();
                     getNotes();
-                    noteController.clear();
+                    //noteController.clear();
                     //print(notes);
                   }
+                }else{
+                  noteController.clear();
                 }
                 print(editMode);
               });
@@ -102,7 +104,8 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Future<Null> addNoteToDb() async {
-    http.post("http://10.0.2.2/to_do/note_data.php", body: {
+    print("this is the note ${noteController.text}");
+    return http.post("http://10.0.2.2/to_do/note_data.php", body: {
       "note": noteController.text,
       "userId": widget.userId.toString(),
     }).then((result) {
@@ -113,7 +116,8 @@ class HomeScreenState extends State<HomeScreen> {
   Future<List> getNotes({BuildContext context}) async {
     http.get("http://10.0.2.2/to_do/get_notes.php?userId=${widget.userId}").then((response) {
       Map<String, dynamic> map = jsonDecode(response.body);
-      print(map);
+      print(response.body);
+      notes.clear();
       map["array"].forEach((map) => notes.add(map["note"]));
     }).whenComplete(() {
       setState(() {
