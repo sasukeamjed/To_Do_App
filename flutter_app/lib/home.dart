@@ -1,13 +1,11 @@
-import 'dart:async';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import 'model/note_model.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'scoped_model/user_scoped_model.dart';
 
 class HomeScreen extends StatefulWidget {
-  String username;
-  int userId;
 
-  HomeScreen(this.username, this.userId);
+  UserScopedModel userScopedModel = UserScopedModel();
 
   @override
   HomeScreenState createState() {
@@ -21,12 +19,12 @@ class HomeScreenState extends State<HomeScreen> {
 
   bool taskIsDone = false;
 
-  List<String> notes = new List();
+  List<Note> notes = new List();
 
   @override
   void initState() {
     notes.clear();
-    getNotes();
+    widget.userScopedModel.getNotes(widget.userScopedModel.getUserId);
     super.initState();
   }
 
@@ -34,32 +32,43 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.username}'),
+        title: ScopedModelDescendant<UserScopedModel>(
+          builder: (BuildContext context, Widget child, UserScopedModel model) {
+            return Text('${model.getUsername}');
+          },
+        ),
         centerTitle: true,
         actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              Icons.add,
-            ),
-            onPressed: () {
-              setState(() {
-                editMode = !editMode;
-                if (editMode == false) {
-                  if (noteController.text.isEmpty) {
-                    print("there is nothing to add");
-                    return null;
-                  } else {
-                    notes.add(noteController.text);
-                    addNoteToDb();
-                    getNotes();
-                    //noteController.clear();
-                    //print(notes);
-                  }
-                }else{
-                  noteController.clear();
-                }
-                print(editMode);
-              });
+          ScopedModelDescendant<UserScopedModel>(
+            builder:
+                (BuildContext context, Widget child, UserScopedModel model) {
+              return IconButton(
+                icon: Icon(
+                  Icons.add,
+                ),
+                onPressed: () {
+                  setState(() {
+                    editMode = !editMode;
+                    if (editMode == false) {
+                      if (noteController.text.isEmpty) {
+                        print("there is nothing to add");
+                        widget.userScopedModel.deleteNotes(notes);
+                        return null;
+                      } else {
+                        notes.add(Note(note: noteController.text));
+                        model.addNoteToDb(model.getUserId, noteController.text);
+                        model.getNotes(model.getUserId);
+                        model.deleteNotes(notes);
+                        //noteController.clear();
+                        //print(notes);
+                      }
+                    } else {
+                      noteController.clear();
+                    }
+                    print(editMode);
+                  });
+                },
+              );
             },
           ),
         ],
@@ -87,12 +96,12 @@ class HomeScreenState extends State<HomeScreen> {
             return Column(
               children: <Widget>[
                 ListTile(
-                  title: Text(notes[index]),
+                  title: Text(notes[index].note),
                   trailing: Checkbox(
-                      value: taskIsDone,
-                      onChanged: (mode) {
+                      value: notes[index].taskIsDone,
+                      onChanged: (bool mode) {
                         setState(() {
-                          taskIsDone = mode;
+                          notes[index].taskIsDone = mode;
                         });
                       }),
                 ),
@@ -101,28 +110,5 @@ class HomeScreenState extends State<HomeScreen> {
             );
           });
     }
-  }
-
-  Future<Null> addNoteToDb() async {
-    print("this is the note ${noteController.text}");
-    return http.post("http://10.0.2.2/to_do/note_data.php", body: {
-      "note": noteController.text,
-      "userId": widget.userId.toString(),
-    }).then((result) {
-      print(result.body);
-    });
-  }
-
-  Future<List> getNotes({BuildContext context}) async {
-    http.get("http://10.0.2.2/to_do/get_notes.php?userId=${widget.userId}").then((response) {
-      Map<String, dynamic> map = jsonDecode(response.body);
-      print(response.body);
-      notes.clear();
-      map["array"].forEach((map) => notes.add(map["note"]));
-    }).whenComplete(() {
-      setState(() {
-        listNotesBuilder(context);
-      });
-    });
   }
 }
