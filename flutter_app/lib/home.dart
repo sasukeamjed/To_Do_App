@@ -4,8 +4,7 @@ import 'package:scoped_model/scoped_model.dart';
 import 'scoped_model/user_scoped_model.dart';
 
 class HomeScreen extends StatefulWidget {
-
-  UserScopedModel userScopedModel = UserScopedModel();
+  final UserScopedModel userScopedModel = UserScopedModel();
 
   @override
   HomeScreenState createState() {
@@ -19,12 +18,10 @@ class HomeScreenState extends State<HomeScreen> {
 
   bool taskIsDone = false;
 
-  List<Note> notes = new List();
-
   @override
   void initState() {
-    notes.clear();
-    widget.userScopedModel.getNotes(widget.userScopedModel.getUserId);
+    //widget.userScopedModel.getNotes;
+    //widget.userScopedModel.getFromServerNotes(widget.userScopedModel.getUserId);
     super.initState();
   }
 
@@ -52,13 +49,14 @@ class HomeScreenState extends State<HomeScreen> {
                     if (editMode == false) {
                       if (noteController.text.isEmpty) {
                         print("there is nothing to add");
-                        widget.userScopedModel.deleteNotes(notes);
+                        model.deleteNotes();
                         return null;
                       } else {
-                        notes.add(Note(note: noteController.text));
+                        widget.userScopedModel.getNotes
+                            .add(Note(note: noteController.text));
                         model.addNoteToDb(model.getUserId, noteController.text);
-                        model.getNotes(model.getUserId);
-                        model.deleteNotes(notes);
+                        //model.getFromServerNotes(model.getUserId);
+                        model.deleteNotes();
                         //noteController.clear();
                         //print(notes);
                       }
@@ -74,34 +72,61 @@ class HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: Center(
-        child: editMode
-            ? TextField(
-                controller: noteController,
-                autofocus: true,
-              )
-            : listNotesBuilder(context),
+        child: ScopedModelDescendant<UserScopedModel>(
+          builder: (BuildContext context, Widget child, UserScopedModel model) {
+            return editMode
+                ? TextField(
+                    controller: noteController,
+                    autofocus: true,
+                  )
+                : model.getNotes.isEmpty
+                    ? Text('There is not items available')
+                    : ListView.builder(
+                        itemCount: model.getNotes.length,
+                        itemBuilder: (context, index) {
+                          return Column(
+                            children: <Widget>[
+                              ListTile(
+                                title: Text(model.getNotes[index].note),
+                                trailing: Checkbox(
+                                    value: model
+                                        .getNotes[index].taskIsDone,
+                                    onChanged: (bool mode) {
+                                      setState(() {
+                                        model.getNotes[index]
+                                            .taskIsDone = mode;
+                                      });
+                                    }),
+                              ),
+                              Divider(),
+                            ],
+                          );
+                        });
+          },
+        ),
       ),
     );
   }
 
   Widget listNotesBuilder(BuildContext context) {
-    if (notes.isEmpty) {
+    if (widget.userScopedModel.getNotes.isEmpty) {
       print('list is empty');
       return Text('There is not items available');
     } else {
       print('there is items on the list');
       return ListView.builder(
-          itemCount: notes.length,
+          itemCount: widget.userScopedModel.getNotes.length,
           itemBuilder: (context, index) {
             return Column(
               children: <Widget>[
                 ListTile(
-                  title: Text(notes[index].note),
+                  title: Text(widget.userScopedModel.getNotes[index].note),
                   trailing: Checkbox(
-                      value: notes[index].taskIsDone,
+                      value: widget.userScopedModel.getNotes[index].taskIsDone,
                       onChanged: (bool mode) {
                         setState(() {
-                          notes[index].taskIsDone = mode;
+                          widget.userScopedModel.getNotes[index].taskIsDone =
+                              mode;
                         });
                       }),
                 ),

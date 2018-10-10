@@ -15,7 +15,8 @@ class UserScopedModel extends Model {
 
   List<Note> _notes = [];
 
-  List<Note> get notes {
+
+  List<Note> get getNotes {
     return List.from(_notes);
   }
 
@@ -51,22 +52,33 @@ class UserScopedModel extends Model {
     });
   }
 
-  Future<void> getNotes(int userId) async {
-    http
-        .get("http://10.0.2.2/to_do/get_notes.php?userId=${userId.toString()}")
-        .then((response) {
-      Map<String, dynamic> map = jsonDecode(response.body);
-      print('this is the map: $map');
-      notes.clear();
-      map["array"].forEach((map) => notes.add(Note(
-          noteId: int.parse(map["noteId"]),
-          note: map["note"],
-          userId: userId)));
+  Future<List<Note>> getFromServerNotes(int userId) async {
+    if(_notes.isEmpty){
+      await http
+          .get("http://10.0.2.2/to_do/get_notes.php?userId=${userId.toString()}")
+          .then((response) {
+        Map<String, dynamic> map = jsonDecode(response.body);
+        print('this is the map: $map');
+        _notes.clear();
+        map["array"].forEach((map) {
+          print('adding note');
+          return _notes.add(Note(
+              noteId: int.parse(map["noteId"]),
+              note: map["note"],
+              userId: userId));
+        });
+      });
+    }else {
+      return;
+    }
+    _notes.forEach((note){
+      print(note.note);
     });
+    return _notes;
   }
 
-  List<Note> deleteNotes(List<Note> notes) {
-    notes.forEach((note) {
+  List<Note> deleteNotes() {
+    _notes.forEach((note) {
       if (note.taskIsDone) {
         http
             .get(
@@ -75,7 +87,7 @@ class UserScopedModel extends Model {
           print(response.body);
           Map<String, dynamic> map = jsonDecode(response.body);
           if (map["code"] == "1") {
-            notes.remove(note);
+            _notes.remove(note);
           } else {
             print("delete failed");
           }
@@ -84,7 +96,7 @@ class UserScopedModel extends Model {
         print("there is no notes to delete");
       }
     });
-    return notes;
+    return _notes;
   }
 
   Future<void> getLogin(String username, String password, BuildContext context) async {
@@ -96,7 +108,7 @@ class UserScopedModel extends Model {
       _userId = int.parse(convertedData['result'][0]['id']);
       _username = convertedData['result'][0]['username'];
       _isActive = true;
-      getNotes(_userId);
+      getFromServerNotes(_userId);
       Navigator.pushReplacementNamed(context, "/home_screen");
     }).catchError((error){
       print(error);
