@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'model/note_model.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'scoped_model/user_scoped_model.dart';
+import 'scoped_model/main.dart';
+import 'note_viewer.dart';
+import 'enums.dart';
 
 class HomeScreen extends StatefulWidget {
-  final UserScopedModel userScopedModel = UserScopedModel();
+  //final MainModel userScopedModel = MainModel();
 
   @override
   HomeScreenState createState() {
@@ -29,16 +31,15 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: ScopedModelDescendant<UserScopedModel>(
-          builder: (BuildContext context, Widget child, UserScopedModel model) {
+        title: ScopedModelDescendant<MainModel>(
+          builder: (BuildContext context, Widget child, MainModel model) {
             return Text('${model.getUsername}');
           },
         ),
         centerTitle: true,
         actions: <Widget>[
-          ScopedModelDescendant<UserScopedModel>(
-            builder:
-                (BuildContext context, Widget child, UserScopedModel model) {
+          ScopedModelDescendant<MainModel>(
+            builder: (BuildContext context, Widget child, MainModel model) {
               return IconButton(
                 icon: Icon(
                   Icons.add,
@@ -52,7 +53,7 @@ class HomeScreenState extends State<HomeScreen> {
                         model.deleteNotes();
                         return null;
                       } else {
-                        widget.userScopedModel.getNotes
+                        model.getOrginalNotes
                             .add(Note(note: noteController.text));
                         model.addNoteToDb(model.getUserId, noteController.text);
                         //model.getFromServerNotes(model.getUserId);
@@ -70,33 +71,68 @@ class HomeScreenState extends State<HomeScreen> {
             },
           ),
         ],
+        leading: Container(
+          margin: EdgeInsets.symmetric(vertical: 10.0),
+          decoration: BoxDecoration(
+            border: Border.all(),
+          ),
+          child: ScopedModelDescendant(
+              builder: (BuildContext context, Widget child, MainModel model) {
+            return FlatButton(
+              onPressed: () {
+                model.logOut(context);
+              },
+              child: Text(
+                'Log Out',
+                style: TextStyle(fontSize: 10.0),
+              ),
+            );
+          }),
+        ),
       ),
       body: Center(
-        child: ScopedModelDescendant<UserScopedModel>(
-          builder: (BuildContext context, Widget child, UserScopedModel model) {
+        child: ScopedModelDescendant<MainModel>(
+          builder: (BuildContext context, Widget child, MainModel model) {
             return editMode
-                ? TextField(
-                    controller: noteController,
-                    autofocus: true,
+                ? GestureDetector(
+                    child: TextField(
+                      controller: noteController,
+                      autofocus: true,
+                    ),
+                    onTap: () {
+                      print("Edit Text is tapped");
+                    },
                   )
-                : model.getNotes.isEmpty
-                    ? Text('There is not items available')
+                : model.getOrginalNotes.isEmpty
+                    ? Text('There is no items available')
                     : ListView.builder(
-                        itemCount: model.getNotes.length,
+                        itemCount: model.getOrginalNotes.length,
                         itemBuilder: (context, index) {
                           return Column(
                             children: <Widget>[
                               ListTile(
-                                title: Text(model.getNotes[index].note),
+                                title: Text(
+                                  model.cuttingTheText(
+                                      3, 20, model.getOrginalNotes[index].note),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Text(
+                                  model.cuttingTheText(
+                                      8, 25, model.getOrginalNotes[index].note),
+                                  style: TextStyle(color: Colors.grey),
+                                ),
                                 trailing: Checkbox(
-                                    value: model
-                                        .getNotes[index].taskIsDone,
+                                    value:
+                                        model.getOrginalNotes[index].taskIsDone,
                                     onChanged: (bool mode) {
                                       setState(() {
-                                        model.getNotes[index]
+                                        model.getOrginalNotes[index]
                                             .taskIsDone = mode;
                                       });
                                     }),
+                                onTap: () {
+                                  onNoteClicked(index, model.getOrginalNotes);
+                                },
                               ),
                               Divider(),
                             ],
@@ -108,32 +144,40 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget listNotesBuilder(BuildContext context) {
-    if (widget.userScopedModel.getNotes.isEmpty) {
-      print('list is empty');
-      return Text('There is not items available');
-    } else {
-      print('there is items on the list');
-      return ListView.builder(
-          itemCount: widget.userScopedModel.getNotes.length,
-          itemBuilder: (context, index) {
-            return Column(
-              children: <Widget>[
-                ListTile(
-                  title: Text(widget.userScopedModel.getNotes[index].note),
-                  trailing: Checkbox(
-                      value: widget.userScopedModel.getNotes[index].taskIsDone,
-                      onChanged: (bool mode) {
-                        setState(() {
-                          widget.userScopedModel.getNotes[index].taskIsDone =
-                              mode;
-                        });
-                      }),
-                ),
-                Divider(),
-              ],
-            );
-          });
-    }
+//model.getShortNotes[index]
+
+//  Widget listNotesBuilder(BuildContext context) {
+//    if (widget.userScopedModel.getNotes.isEmpty) {
+//      print('list is empty');
+//      return Text('There is not items available');
+//    } else {
+//      print('there is items on the list');
+//      return ListView.builder(
+//          itemCount: widget.userScopedModel.getNotes.length,
+//          itemBuilder: (context, index) {
+//            return Column(
+//              children: <Widget>[
+//                ListTile(
+//                  title: Text(widget.userScopedModel.getNotes[index].note),
+//                  trailing: Checkbox(
+//                      value: widget.userScopedModel.getNotes[index].taskIsDone,
+//                      onChanged: (bool mode) {
+//                        setState(() {
+//                          widget.userScopedModel.getNotes[index].taskIsDone =
+//                              mode;
+//                        });
+//                      }),
+//                ),
+//                Divider(),
+//              ],
+//            );
+//          });
+//    }
+//  }
+
+  onNoteClicked(int index, List<Note> notes) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return NoteViewer(note: notes[index]);
+    }));
   }
 }

@@ -4,15 +4,19 @@ import 'login_screen.dart';
 import 'register.dart';
 import 'home.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'scoped_model/user_scoped_model.dart';
+import 'scoped_model/main.dart';
+import 'package:flutter/rendering.dart';
 
-void main() => runApp(new MyApp());
+void main() {
+  //debugPaintBaselinesEnabled = true;
+  return runApp(new MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return ScopedModel<UserScopedModel>(
-      model: UserScopedModel(),
+    return ScopedModel<MainModel>(
+      model: MainModel(),
       child: MaterialApp(
         title: 'Flutter Demo',
         theme: new ThemeData(

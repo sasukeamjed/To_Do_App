@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:scoped_model/scoped_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
-import '../model/note_model.dart';
 import '../model/user_model.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'global_scoped_model.dart';
+import '../enums.dart';
 
-class UserScopedModel extends Model {
+
+class UserScopedModel extends Model with  GlobalScopedModel{
+
+  UserState userState = UserState.loggedOut;
 
   String _username;
   int _userId;
   bool _isActive = false;
   User user;
-
-  List<Note> _notes = [];
-
-
-  List<Note> get getNotes {
-    return List.from(_notes);
-  }
 
   set username(String username){
      _username = username;
@@ -30,6 +27,7 @@ class UserScopedModel extends Model {
 
   set isActive(bool isActive){
     _isActive = isActive;
+    notifyListeners();
   }
 
   bool get getIsActive => _isActive;
@@ -42,65 +40,8 @@ class UserScopedModel extends Model {
      user = User(username: _username, userId: _userId, loggedInStatus: _isActive);
   }
 
-  Future<Null> addNoteToDb(int userId, String note) async {
-    print("this is the note $note");
-    return http.post("http://10.0.2.2/to_do/note_data.php", body: {
-      "note": note,
-      "userId": userId.toString(),
-    }).then((result) {
-      print(result.body);
-    });
-  }
-
-  Future<List<Note>> getFromServerNotes(int userId) async {
-    if(_notes.isEmpty){
-      await http
-          .get("http://10.0.2.2/to_do/get_notes.php?userId=${userId.toString()}")
-          .then((response) {
-        Map<String, dynamic> map = jsonDecode(response.body);
-        print('this is the map: $map');
-        _notes.clear();
-        map["array"].forEach((map) {
-          print('adding note');
-          return _notes.add(Note(
-              noteId: int.parse(map["noteId"]),
-              note: map["note"],
-              userId: userId));
-        });
-      });
-    }else {
-      return;
-    }
-    _notes.forEach((note){
-      print(note.note);
-    });
-    return _notes;
-  }
-
-  List<Note> deleteNotes() {
-    _notes.forEach((note) {
-      if (note.taskIsDone) {
-        http
-            .get(
-            "http://10.0.2.2/to_do/remove_note.php?noteId=${note.noteId.toString()}")
-            .then((response) {
-          print(response.body);
-          Map<String, dynamic> map = jsonDecode(response.body);
-          if (map["code"] == "1") {
-            _notes.remove(note);
-          } else {
-            print("delete failed");
-          }
-        });
-      } else {
-        print("there is no notes to delete");
-      }
-    });
-    return _notes;
-  }
-
-  Future<void> getLogin(String username, String password, BuildContext context) async {
-    await http.get("http://10.0.2.2/to_do/login.php?username=$username&password=$password")
+  Future<void> getLogin(String username, String password, BuildContext context)  {
+    return http.get("http://10.0.2.2/to_do/login.php?username=$username&password=$password")
         .then((response){
       var data = response.body;
       Map<String, dynamic> convertedData = jsonDecode(data);
@@ -109,10 +50,17 @@ class UserScopedModel extends Model {
       _username = convertedData['result'][0]['username'];
       _isActive = true;
       getFromServerNotes(_userId);
+      userState = UserState.loggedIn;
+      print(userState);
       Navigator.pushReplacementNamed(context, "/home_screen");
     }).catchError((error){
       print(error);
     });
+  }
+
+  void logOut(BuildContext context){
+    userState = UserState.loggedOut;
+    Navigator.pushReplacementNamed(context, "/login_screen");
   }
 
 }

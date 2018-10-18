@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'auth/user_methods.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'scoped_model/user_scoped_model.dart';
+import 'scoped_model/main.dart';
+
 
 class LoginScreen extends StatelessWidget {
 
@@ -34,7 +35,7 @@ class LoginScreen extends StatelessWidget {
                 labelText: 'Password',
               ),
             ),
-            ScopedModelDescendant<UserScopedModel>(builder: (BuildContext context, Widget child, UserScopedModel model){
+            ScopedModelDescendant<MainModel>(builder: (BuildContext context, Widget child, MainModel model){
               return FlatButton(
                 child: Text('Log In'),
                 onPressed: (){
