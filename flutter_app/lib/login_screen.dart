@@ -35,15 +35,26 @@ class LoginScreen extends StatelessWidget {
                 labelText: 'Password',
               ),
             ),
-            ScopedModelDescendant<MainModel>(builder: (BuildContext context, Widget child, MainModel model){
-              return FlatButton(
-                child: Text('Log In'),
-                onPressed: (){
-                  //createUser();
-                  model.getLogin(username.text, password.text, context);
-                },
-              );
-            },),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                ScopedModelDescendant<MainModel>(builder: (BuildContext context, Widget child, MainModel model){
+                  return FlatButton(
+                    child: Text('Log In'),
+                    onPressed: (){
+                      //createUser();
+                      model.getLogin(username.text, password.text, context);
+                    },
+                  );
+                },),
+                FlatButton(
+                  child: Text('Register New Account'),
+                  onPressed: (){
+                    Navigator.pushReplacementNamed(context, "/register_screen");
+                  },
+                )
+              ],
+            ),
           ],
         ),
       ),
